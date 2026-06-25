@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sailor's Playbook — projectAdnan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#F2EDD7; --paper2:#E8E0C4; --ink:#1C1C1E;
+  --water:#2B5F8E; --water-light:#4A90C4; --water-dark:#1A3D5C;
+  --tide:#C0392B; --brass:#B5862A; --brass-light:#D4A835;
+  --muted:#6B6050; --rule:#C8BC9E; --green:#5A8A57;
+}
+html,body{height:100%;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;overflow:hidden}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:1fr 400px;grid-template-rows:52px 1fr;height:100vh}
+
+/* HEADER */
+header{
+  grid-column:1/-1;background:var(--water-dark);border-bottom:3px solid var(--brass);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+  position:relative;overflow:hidden;
+}
+header::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 60px),
+             repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 60px);
+}
+.brand{display:flex;flex-direction:column;gap:1px;position:relative}
+.brand-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#F2EDD7;letter-spacing:.02em;line-height:1}
+.brand-sub{font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--brass-light)}
+.header-nav{display:flex;align-items:center;gap:8px;position:relative}
+.nav-btn{
+  font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:500;letter-spacing:.04em;
+  padding:6px 16px;border-radius:2px;cursor:pointer;border:1px solid rgba(242,237,215,.25);
+  background:transparent;color:#F2EDD7;text-transform:uppercase;transition:background .15s,border-color .15s;
+}
+.nav-btn:hover{background:rgba(242,237,215,.1);border-color:rgba(242,237,215,.5)}
+.nav-btn.primary{background:var(--brass);border-color:var(--brass);color:var(--water-dark);font-weight:600}
+.nav-btn.primary:hover{background:var(--brass-light)}
+
+/* CANVAS */
+.canvas-wrap{position:relative;overflow:hidden;background:var(--paper2)}
+canvas{display:block;width:100%;height:100%}
+.compass{position:absolute;bottom:18px;left:18px;width:64px;height:64px;opacity:.5;pointer-events:none}
+.coord-hud{
+  position:absolute;top:10px;left:12px;font-family:'IBM Plex Mono',monospace;
+  font-size:10px;color:var(--water-dark);opacity:.7;pointer-events:none;line-height:1.7;
+}
+
+/* PANEL */
+.panel{background:var(--paper);border-left:2px solid var(--rule);overflow-y:auto;overflow-x:hidden}
+.panel::-webkit-scrollbar{width:3px}
+.panel::-webkit-scrollbar-track{background:var(--paper2)}
+.panel::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+
+.psec{padding:14px 18px;border-bottom:1px solid var(--rule)}
+.psec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.psec-title{
+  font-family:'Playfair Display',serif;font-size:12px;font-weight:700;font-style:italic;
+  letter-spacing:.04em;color:var(--brass);border-bottom:1px solid var(--brass);padding-bottom:2px;
+}
+.psec-title-plain{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.toggle-vis{
+  font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--water);
+  cursor:pointer;border:1px solid var(--water);border-radius:2px;padding:2px 8px;background:none;
+  font-family:'IBM Plex Sans',sans-serif;transition:background .12s;
+}
+.toggle-vis:hover{background:rgba(43,95,142,.08)}
+
+/* SLIDERS */
+.ctrl{margin-bottom:13px}
+.ctrl:last-child{margin-bottom:0}
+.ctrl-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px}
+.ctrl-name{font-size:12px;font-weight:500;color:var(--ink)}
+.ctrl-val{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--water)}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:0;background:var(--rule);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--ink);
+  cursor:pointer;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--ink);transition:transform .1s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3)}
+.range-ends{display:flex;justify-content:space-between;margin-top:3px}
+.range-end{font-size:9px;color:var(--muted);letter-spacing:.03em}
+
+.dir-toggle{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.dir-btn{
+  font-family:'IBM Plex Sans',sans-serif;font-size:11px;font-weight:500;
+  padding:7px 6px;border:1px solid var(--rule);background:transparent;color:var(--muted);
+  cursor:pointer;border-radius:1px;text-align:center;transition:all .12s;
+}
+.dir-btn.on{background:var(--water-dark);border-color:var(--water-dark);color:#F2EDD7}
+.dir-btn:hover:not(.on){border-color:var(--water);color:var(--water)}
+
+.wind-controls{display:none;margin-top:10px}
+.wind-controls.visible{display:block}
+.wind-enable{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;cursor:pointer;user-select:none}
+.wind-enable input[type=checkbox]{accent-color:var(--water-dark);width:13px;height:13px;cursor:pointer}
+
+/* RESULTS */
+.collapsible{transition:max-height .3s ease,opacity .25s;max-height:800px;opacity:1;overflow:hidden}
+.collapsible.hidden{max-height:0;opacity:0}
+.rtable{width:100%;border-collapse:collapse}
+.rtable tr{border-bottom:1px solid var(--rule)}
+.rtable tr:last-child{border-bottom:none}
+.rtable td{padding:6px 2px;font-size:12px;vertical-align:baseline}
+.rtable td:first-child{color:var(--muted);font-size:11px;width:55%}
+.rtable td:last-child{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;text-align:right}
+.rtable .hi td:last-child{color:var(--water)}
+.rtable .warn td:last-child{color:var(--tide)}
+.rtable .ok td:last-child{color:var(--green)}
+
+/* FORMULA */
+.formula{
+  background:var(--paper2);border-left:3px solid var(--brass);
+  padding:9px 10px;margin-bottom:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.9;
+  color:var(--ink);white-space:pre;
+}
+.formula:last-child{margin-bottom:0}
+.formula .sym{color:var(--water-dark);font-weight:600}
+.formula .num{color:var(--brass)}
+.formula .res{color:var(--tide);font-weight:600}
+.formula .head{
+  font-family:'IBM Plex Sans',sans-serif;font-size:9px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;
+}
+
+/* LEGEND */
+.legend{display:flex;flex-direction:column;gap:6px}
+.leg-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.leg-line{width:24px;height:2px;flex-shrink:0}
+.leg-dash{border-top:2px dashed;width:24px;height:0;flex-shrink:0}
+
+/* PROFESSOR */
+#prof-wrap{
+  position:fixed;bottom:-260px;right:24px;z-index:100;
+  transition:bottom .5s cubic-bezier(.34,1.4,.64,1);
+  display:flex;flex-direction:column;align-items:flex-end;
+}
+#prof-wrap.show{bottom:16px}
+#prof-bubble{
+  background:#FFFBF0;border:2px solid var(--ink);
+  border-radius:14px 14px 2px 14px;padding:14px 16px;
+  max-width:290px;box-shadow:4px 4px 0 var(--ink);
+  margin-bottom:0;margin-right:68px;
+  animation:none;
+}
+#prof-wrap.show #prof-bubble{animation:bobble .6s ease}
+@keyframes bobble{0%{transform:scale(.92)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+.prof-q{font-size:13px;line-height:1.55;color:var(--ink)}
+.prof-q strong{color:var(--tide);font-weight:600}
+.prof-q em{font-style:italic;color:var(--water-dark)}
+.prof-opts{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.prof-opt{
+  font-size:11px;font-weight:500;padding:6px 10px;border:1px solid var(--ink);border-radius:2px;
+  background:transparent;color:var(--ink);cursor:pointer;font-family:'IBM Plex Sans',sans-serif;
+  text-align:left;transition:background .1s;
+}
+.prof-opt:hover{background:rgba(43,95,142,.1)}
+.prof-bottom{display:flex;align-items:flex-end;justify-content:flex-end;gap:0}
+.prof-close-row{display:flex;justify-content:flex-end;margin-top:8px}
+.prof-close{
+  font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  cursor:pointer;background:none;border:none;font-family:'IBM Plex Sans',sans-serif;
+}
+.prof-face{
+  width:58px;height:58px;flex-shrink:0;
+  background:var(--water-dark);border:2px solid var(--ink);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+  box-shadow:3px 3px 0 var(--ink);align-self:flex-end;
+}
+
+/* ANSWER MODAL */
+#ans-panel{
+  position:fixed;inset:0;background:rgba(28,28,30,.55);backdrop-filter:blur(3px);
+  z-index:150;display:none;align-items:center;justify-content:center;
+}
+#ans-panel.open{display:flex}
+#ans-box{
+  background:var(--paper);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--ink);
+  padding:26px 30px;max-width:440px;width:90%;border-radius:2px;
+}
+.ans-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:5px}
+.ans-hint{font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.55;font-style:italic}
+.ans-row{display:flex;gap:8px;margin-bottom:9px;align-items:center}
+.ans-label{font-size:12px;font-weight:500;width:175px;flex-shrink:0}
+.ans-input{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--rule);
+  background:var(--paper2);padding:5px 8px;border-radius:1px;width:100%;outline:none;color:var(--ink);
+}
+.ans-input:focus{border-color:var(--water)}
+.ans-btns{display:flex;gap:8px;margin-top:14px}
+.ans-btn{
+  font-family:'IBM Plex Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;padding:8px 18px;border-radius:2px;cursor:pointer;
+  border:1px solid var(--ink);background:var(--ink);color:var(--paper);transition:opacity .12s;
+}
+.ans-btn:hover{opacity:.8}
+.ans-btn.cancel{background:transparent;color:var(--ink)}
+.ans-feedback{
+  margin-top:12px;padding:10px 12px;border-radius:2px;font-size:12px;line-height:1.6;display:none;
+}
+.ans-feedback.correct{background:rgba(90,138,87,.1);border-left:3px solid var(--green);color:#3A6038}
+.ans-feedback.wrong{background:rgba(192,57,43,.08);border-left:3px solid var(--tide);color:var(--tide)}
+.ans-feedback.show{display:block}
+
+/* TOAST */
+#toast{
+  position:fixed;top:56px;left:50%;transform:translateX(-50%) translateY(-70px);
+  background:var(--water-dark);color:#F2EDD7;font-size:12px;font-weight:500;
+  padding:8px 20px;border-bottom:2px solid var(--brass);z-index:200;
+  font-family:'IBM Plex Sans',sans-serif;letter-spacing:.02em;white-space:nowrap;
+  transition:transform .28s cubic-bezier(.34,1.4,.64,1);
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-title">Sailor's Playbook</div>
+    <div class="brand-sub">by projectAdnan &nbsp;·&nbsp; River Crossing Physics</div>
+  </div>
+  <div class="header-nav">
+    <button class="nav-btn" onclick="resetSim()">Reset</button>
+    <button class="nav-btn" onclick="showProf()">Quiz</button>
+    <button class="nav-btn primary" id="launchBtn" onclick="toggleSim()">Launch</button>
+  </div>
+</header>
+
+<!-- CANVAS -->
+<div class="canvas-wrap">
+  <canvas id="c"></canvas>
+  <svg class="compass" viewBox="0 0 64 64" fill="none">
+    <circle cx="32" cy="32" r="30" stroke="#2B5F8E" stroke-width="1" fill="none" opacity=".5"/>
+    <line x1="32" y1="4" x2="32" y2="60" stroke="#2B5F8E" stroke-width=".6" opacity=".5"/>
+    <line x1="4" y1="32" x2="60" y2="32" stroke="#2B5F8E" stroke-width=".6" opacity=".5"/>
+    <polygon points="32,5 29,28 32,32 35,28" fill="#1A3D5C" opacity=".8"/>
+    <polygon points="32,59 29,36 32,32 35,36" fill="#8BAFC8" opacity=".5"/>
+    <polygon points="5,32 28,29 32,32 28,35" fill="#8BAFC8" opacity=".5"/>
+    <polygon points="59,32 36,29 32,32 36,35" fill="#1A3D5C" opacity=".8"/>
+    <text x="29.5" y="14" font-family="IBM Plex Mono" font-size="7" fill="#1A3D5C" opacity=".8">N</text>
+    <text x="29.5" y="57" font-family="IBM Plex Mono" font-size="7" fill="#8BAFC8" opacity=".6">S</text>
+  </svg>
+  <div class="coord-hud" id="hud">—</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="panel">
+
+  <!-- VESSEL -->
+  <div class="psec">
+    <div class="psec-head"><span class="psec-title">Vessel</span></div>
+    <div class="ctrl">
+      <div class="ctrl-row"><span class="ctrl-name">Boat speed</span><span class="ctrl-val" id="vbs">5.0 m/s</span></div>
+      <input type="range" id="sBoatSpeed" min="1" max="20" step="0.5" value="5" oninput="update()">
+      <div class="range-ends"><span class="range-end">1 m/s</span><span class="range-end">20 m/s</span></div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-row"><span class="ctrl-name">Heading angle</span><span class="ctrl-val" id="vba">90°</span></div>
+      <input type="range" id="sBoatAngle" min="1" max="179" step="1" value="90" oninput="update()">
+      <div class="range-ends">
+        <span class="range-end">← downstream</span>
+        <span class="range-end" style="color:var(--water);font-weight:600">90° = straight</span>
+        <span class="range-end">upstream →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIVER -->
+  <div class="psec">
+    <div class="psec-head"><span class="psec-title">River</span></div>
+    <div class="ctrl">
+      <div class="ctrl-row"><span class="ctrl-name">Current speed</span><span class="ctrl-val" id="vrs">3.0 m/s</span></div>
+      <input type="range" id="sRiverSpeed" min="0" max="20" step="0.5" value="3" oninput="update()">
+      <div class="range-ends"><span class="range-end">0 m/s</span><span class="range-end">20 m/s</span></div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-row"><span class="ctrl-name">Current direction</span></div>
+      <div class="dir-toggle">
+        <button class="dir-btn on" id="dRTL" onclick="setDir('river','rtl')">← Right to Left</button>
+        <button class="dir-btn" id="dLTR" onclick="setDir('river','ltr')">Left to Right →</button>
+      </div>
+    </div>
+    <div class="ctrl">
+      <div class="ctrl-row"><span class="ctrl-name">River width</span><span class="ctrl-val" id="vrw">100 m</span></div>
+      <input type="range" id="sRiverWidth" min="20" max="500" step="10" value="100" oninput="update()">
+      <div class="range-ends"><span class="range-end">20 m</span><span class="range-end">500 m</span></div>
+    </div>
+  </div>
+
+  <!-- WIND -->
+  <div class="psec">
+    <div class="psec-head"><span class="psec-title">Wind</span></div>
+    <label class="wind-enable">
+      <input type="checkbox" id="windOn" onchange="toggleWind()"> Enable wind effect
+    </label>
+    <div id="windControls" class="wind-controls">
+      <div class="ctrl">
+        <div class="ctrl-row"><span class="ctrl-name">Wind speed</span><span class="ctrl-val" id="vws">2.0 m/s</span></div>
+        <input type="range" id="sWindSpeed" min="0" max="15" step="0.5" value="2" oninput="update()">
+        <div class="range-ends"><span class="range-end">0 m/s</span><span class="range-end">15 m/s</span></div>
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-row"><span class="ctrl-name">Wind direction</span></div>
+        <div class="dir-toggle">
+          <button class="dir-btn on" id="dWRTL" onclick="setDir('wind','rtl')">← Right to Left</button>
+          <button class="dir-btn" id="dWLTR" onclick="setDir('wind','ltr')">Left to Right →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEASUREMENTS -->
+  <div class="psec">
+    <div class="psec-head">
+      <span class="psec-title">Measurements</span>
+      <button class="toggle-vis" onclick="toggleSection('resWrap',this)">Hide</button>
+    </div>
+    <div class="collapsible" id="resWrap">
+      <table class="rtable">
+        <tr class="hi"><td>Resultant speed</td><td id="rSpeed">—</td></tr>
+        <tr><td>Crossing time</td><td id="rTime">—</td></tr>
+        <tr class="warn"><td>Drift (x-axis)</td><td id="rDrift">—</td></tr>
+        <tr><td>Displacement — x</td><td id="rDispX">—</td></tr>
+        <tr class="ok"><td>Displacement — y</td><td id="rDispY">—</td></tr>
+        <tr><td>Total displacement</td><td id="rTotal">—</td></tr>
+        <tr><td>Drift angle from bank</td><td id="rAngle">—</td></tr>
+        <tr><td>Landing offset</td><td id="rLand">—</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- WORKING -->
+  <div class="psec">
+    <div class="psec-head">
+      <span class="psec-title">Working</span>
+      <button class="toggle-vis" onclick="toggleSection('fWrap',this)">Hide</button>
+    </div>
+    <div class="collapsible" id="fWrap">
+      <div class="formula" id="fVel">—</div>
+      <div class="formula" id="fTime">—</div>
+      <div class="formula" id="fDrift">—</div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="psec">
+    <div class="psec-head"><span class="psec-title-plain">Vector Key</span></div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:#2B5F8E"></div> Boat velocity (V<sub>b</sub>)</div>
+      <div class="leg-item"><div class="leg-line" style="background:#B5862A"></div> Current velocity (V<sub>r</sub>)</div>
+      <div class="leg-item"><div class="leg-line" style="background:#5A8A57"></div> Wind velocity (V<sub>w</sub>)</div>
+      <div class="leg-item"><div class="leg-line" style="background:#C0392B"></div> Resultant (V<sub>res</sub>)</div>
+      <div class="leg-item"><div class="leg-dash" style="color:#C0392B"></div> Actual path</div>
+      <div class="leg-item"><div class="leg-dash" style="color:#2B5F8E;opacity:.4"></div> Aimed direction</div>
+    </div>
+  </div>
+
+</div><!-- /panel -->
+</div><!-- /app -->
+
+<!-- PROFESSOR -->
+<div id="prof-wrap">
+  <div id="prof-bubble">
+    <div class="prof-q" id="profQ">—</div>
+    <div class="prof-opts" id="profOpts"></div>
+    <div class="prof-close-row"><button class="prof-close" onclick="hideProf()">dismiss ✕</button></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end">
+    <div class="prof-face" id="profFace">⚓</div>
+  </div>
+</div>
+
+<!-- ANSWER MODAL -->
+<div id="ans-panel">
+  <div id="ans-box">
+    <div class="ans-title" id="ansTitle">Challenge</div>
+    <div class="ans-hint" id="ansHint">Adjust the simulator, then enter your answers.</div>
+    <div id="ansFields"></div>
+    <div class="ans-feedback" id="ansFeedback"></div>
+    <div class="ans-btns">
+      <button class="ans-btn" onclick="checkAnswer()">Check</button>
+      <button class="ans-btn cancel" onclick="closeAns()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const S = {
+  boatSpeed:5, boatAngle:90,
+  riverSpeed:3, riverDir:'rtl', riverWidth:100,
+  windOn:false, windSpeed:2, windDir:'rtl',
+};
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const DPR = () => window.devicePixelRatio || 1;
+const CW = () => canvas.width / DPR();
+const CH = () => canvas.height / DPR();
+
+// Animation state
+let wavePhase = 0;
+let simRunning = false;
+let boatT = 0;        // 0..1 fraction of crossing
+let trail = [];
+let ripples = [];     // [{x,y,r,max,alpha}]
+let lastTS = null;
+let toastTimer = null;
+let qIdx = 0;
+let currentAns = null;
+let dockTarget = null; // set when exact_point quiz is active
+
+// Particles for river flow
+const PTCL = [];
+
+// ═══════════════════════════════════════════════
+// PHYSICS
+// ═══════════════════════════════════════════════
+function compute() {
+  const vb = S.boatSpeed;
+  const θ  = S.boatAngle * Math.PI / 180;
+  const bx = vb * Math.cos(θ);
+  const by = vb * Math.sin(θ);
+  const rvx = S.riverDir === 'ltr' ? S.riverSpeed : -S.riverSpeed;
+  const wvx = S.windOn ? (S.windDir === 'ltr' ? S.windSpeed : -S.windSpeed) : 0;
+  const rx = bx + rvx + wvx;
+  const ry = by;
+  const res = Math.sqrt(rx*rx + ry*ry);
+  const t = ry > 0 ? S.riverWidth / ry : Infinity;
+  const drift = rx * t;
+  const total = Math.sqrt(drift*drift + S.riverWidth*S.riverWidth);
+  const driftAngle = Math.atan2(Math.abs(rx), Math.abs(ry)) * 180 / Math.PI;
+  return { bx, by, rvx, wvx, rx, ry, res, t, drift, total, driftAngle };
+}
+
+// ═══════════════════════════════════════════════
+// BANK GEOMETRY helpers (consistent everywhere)
+// ═══════════════════════════════════════════════
+function geo() {
+  const w = CW(), h = CH();
+  const bankH = Math.round(h * 0.13);
+  return {
+    w, h, bankH,
+    rTop: bankH,
+    rBot: h - bankH,
+    rH: h - 2 * bankH,
+    startX: w / 2,
+    startY: h - bankH - 2,
+  };
+}
+
+// ═══════════════════════════════════════════════
+// UI UPDATE
+// ═══════════════════════════════════════════════
+function update() {
+  S.boatSpeed  = +document.getElementById('sBoatSpeed').value;
+  S.boatAngle  = +document.getElementById('sBoatAngle').value;
+  S.riverSpeed = +document.getElementById('sRiverSpeed').value;
+  S.riverWidth = +document.getElementById('sRiverWidth').value;
+  S.windSpeed  = +document.getElementById('sWindSpeed').value;
+
+  document.getElementById('vbs').textContent = S.boatSpeed.toFixed(1)  + ' m/s';
+  document.getElementById('vba').textContent = S.boatAngle             + '°';
+  document.getElementById('vrs').textContent = S.riverSpeed.toFixed(1) + ' m/s';
+  document.getElementById('vrw').textContent = S.riverWidth            + ' m';
+  document.getElementById('vws').textContent = S.windSpeed.toFixed(1)  + ' m/s';
+
+  const c = compute();
+
+  // HUD
+  let hud = `Vb = ${S.boatSpeed.toFixed(1)} m/s | θ = ${S.boatAngle}° | Vr = ${S.riverSpeed.toFixed(1)} m/s | W = ${S.riverWidth} m`;
+  if (S.windOn) hud += ` | Vw = ${S.windSpeed.toFixed(1)} m/s`;
+  document.getElementById('hud').textContent = hud;
+
+  const dash = '—';
+  if (c.t === Infinity || c.ry <= 0) {
+    ['rSpeed','rTime','rDrift','rDispX','rDispY','rTotal','rAngle','rLand'].forEach(id =>
+      document.getElementById(id).textContent = dash
+    );
+    ['fVel','fTime','fDrift'].forEach(id =>
+      document.getElementById(id).innerHTML = dash
+    );
+    return;
+  }
+
+  const f = (n, d=3) => n.toFixed(d);
+  document.getElementById('rSpeed').textContent  = f(c.res) + ' m/s';
+  document.getElementById('rTime').textContent   = f(c.t)   + ' s';
+  document.getElementById('rDrift').textContent  = f(c.drift) + ' m ' + (c.drift > 0.01 ? '→' : c.drift < -0.01 ? '←' : '');
+  document.getElementById('rDispX').textContent  = f(Math.abs(c.drift)) + ' m';
+  document.getElementById('rDispY').textContent  = f(S.riverWidth) + ' m';
+  document.getElementById('rTotal').textContent  = f(c.total) + ' m';
+  document.getElementById('rAngle').textContent  = f(c.driftAngle, 2) + '°';
+  document.getElementById('rLand').textContent   = Math.abs(c.drift) < 0.01 ? 'Directly opposite' :
+    f(Math.abs(c.drift), 2) + ' m ' + (c.drift > 0 ? 'right' : 'left');
+
+  // Wind line in formula
+  const windLine = S.windOn
+    ? `\n<span class="sym">V<sub>w</sub></span>  = ${c.wvx >= 0 ? '+' : ''}${f(c.wvx)} m/s  (wind)`
+    : '';
+
+  document.getElementById('fVel').innerHTML =
+    `<span class="head">Velocity Components</span>` +
+    `<span class="sym">V<sub>bx</sub></span> = ${f(S.boatSpeed,1)}·cos(${S.boatAngle}°) = <span class="num">${f(c.bx)}</span> m/s\n` +
+    `<span class="sym">V<sub>by</sub></span> = ${f(S.boatSpeed,1)}·sin(${S.boatAngle}°) = <span class="num">${f(c.by)}</span> m/s\n` +
+    `<span class="sym">V<sub>r</sub></span>  = ${c.rvx >= 0 ? '+' : ''}${f(c.rvx)} m/s  (current)` +
+    windLine + '\n' +
+    `<span class="sym">V<sub>res</sub></span> = √(${f(c.rx)}² + ${f(c.ry)}²)\n` +
+    `       = <span class="res">${f(c.res, 4)} m/s</span>`;
+
+  document.getElementById('fTime').innerHTML =
+    `<span class="head">Crossing Time</span>` +
+    `<span class="sym">t</span> = W ÷ V<sub>y</sub>\n` +
+    `  = ${S.riverWidth} ÷ ${f(c.ry)}\n` +
+    `  = <span class="res">${f(c.t, 4)} s</span>`;
+
+  document.getElementById('fDrift').innerHTML =
+    `<span class="head">Displacement (x-axis)</span>` +
+    `<span class="sym">d<sub>x</sub></span>     = V<sub>x,res</sub> × t\n` +
+    `       = ${f(c.rx)} × ${f(c.t)}\n` +
+    `       = <span class="res">${f(c.drift, 4)} m</span>\n` +
+    `<span class="sym">d<sub>total</sub></span>  = √(d<sub>x</sub>² + W²)\n` +
+    `       = √(${f(c.drift)}² + ${S.riverWidth}²)\n` +
+    `       = <span class="res">${f(c.total, 4)} m</span>`;
+}
+
+function setDir(which, dir) {
+  if (which === 'river') {
+    S.riverDir = dir;
+    document.getElementById('dRTL').classList.toggle('on', dir === 'rtl');
+    document.getElementById('dLTR').classList.toggle('on', dir === 'ltr');
+  } else {
+    S.windDir = dir;
+    document.getElementById('dWRTL').classList.toggle('on', dir === 'rtl');
+    document.getElementById('dWLTR').classList.toggle('on', dir === 'ltr');
+  }
+  update();
+}
+
+function toggleWind() {
+  S.windOn = document.getElementById('windOn').checked;
+  document.getElementById('windControls').classList.toggle('visible', S.windOn);
+  update();
+}
+
+function toggleSection(id, btn) {
+  const el = document.getElementById(id);
+  const hidden = el.classList.toggle('hidden');
+  btn.textContent = hidden ? 'Show' : 'Hide';
+}
+
+// ═══════════════════════════════════════════════
+// CANVAS RESIZE
+// ═══════════════════════════════════════════════
+function resize() {
+  const wrap = canvas.parentElement;
+  const dpr = DPR();
+  canvas.width  = wrap.clientWidth  * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  canvas.style.width  = wrap.clientWidth  + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  ctx.scale(dpr, dpr);
+  PTCL.length = 0;
+}
+
+// ═══════════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════════
+function ensureParticles(rTop, rH, w) {
+  if (PTCL.length >= 45) return;
+  while (PTCL.length < 45) {
+    PTCL.push({
+      x: Math.random() * w,
+      y: rTop + Math.random() * rH,
+      life: Math.random(),
+      speed: 0.35 + Math.random() * 0.65,
+      size: 0.8 + Math.random() * 1.0,
+    });
+  }
+}
+
+function stepParticles(rTop, rH, w, dt) {
+  const dir = S.riverDir === 'ltr' ? 1 : -1;
+  const spd = Math.max(0.5, S.riverSpeed * 0.55);
+  for (const p of PTCL) {
+    p.x += dir * spd * p.speed * dt * 55;
+    p.life = (p.life + dt * 0.28) % 1;
+    if (p.x < 0) p.x = w;
+    if (p.x > w) p.x = 0;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RIPPLES (boat wake)
+// ═══════════════════════════════════════════════
+function addRipple(x, y) {
+  ripples.push({ x, y, r: 2, max: 22 + Math.random()*10, alpha: 0.5 });
+}
+
+function stepRipples(dt) {
+  for (const r of ripples) {
+    r.r += dt * 28;
+    r.alpha = 0.5 * (1 - r.r / r.max);
+  }
+  // remove dead
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    if (ripples[i].r >= ripples[i].max) ripples.splice(i, 1);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// DRAW
+// ═══════════════════════════════════════════════
+function draw() {
+  const { w, h, bankH, rTop, rBot, rH, startX, startY } = geo();
+  ctx.clearRect(0, 0, w, h);
+
+  // Chart grid
+  ctx.strokeStyle = 'rgba(43,95,142,0.09)';
+  ctx.lineWidth = .5;
+  const gs = 40;
+  for (let x = 0; x < w; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+  for (let y = 0; y < h; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+  // ── BANKS ──
+  const sandBot = ctx.createLinearGradient(0, rBot, 0, h);
+  sandBot.addColorStop(0, '#B8A062'); sandBot.addColorStop(1, '#E8D5A3');
+  ctx.fillStyle = sandBot; ctx.fillRect(0, rBot, w, bankH);
+
+  const sandTop = ctx.createLinearGradient(0, 0, 0, rTop);
+  sandTop.addColorStop(0, '#E8D5A3'); sandTop.addColorStop(1, '#B8A062');
+  ctx.fillStyle = sandTop; ctx.fillRect(0, 0, w, rTop);
+
+  // Depth hatch marks
+  ctx.strokeStyle = 'rgba(43,95,142,0.18)'; ctx.lineWidth = .7;
+  for (let x = 8; x < w; x += 15) {
+    ctx.beginPath(); ctx.moveTo(x, rBot+2); ctx.lineTo(x-5, rBot+9); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, rTop-2); ctx.lineTo(x-5, rTop-9); ctx.stroke();
+  }
+
+  // Bank labels
+  ctx.font = '500 11px IBM Plex Sans'; ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(43,61,28,.6)';
+  ctx.fillText('START BANK',       w/2, rBot + bankH * 0.62);
+  ctx.fillText('DESTINATION BANK', w/2, rTop * 0.6);
+
+  // Scale ruler ticks
+  ctx.strokeStyle = 'rgba(43,95,142,0.3)'; ctx.lineWidth = .6;
+  for (let i = 0; i <= 10; i++) {
+    const x = (i / 10) * w;
+    ctx.beginPath(); ctx.moveTo(x, rBot); ctx.lineTo(x, rBot + (i%5===0?8:4)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, rTop); ctx.lineTo(x, rTop - (i%5===0?8:4)); ctx.stroke();
+    if (i > 0 && i % 5 === 0) {
+      ctx.font = '9px IBM Plex Mono'; ctx.fillStyle = 'rgba(43,95,142,0.45)'; ctx.textAlign = 'center';
+      ctx.fillText(Math.round(i * S.riverWidth / 10) + 'm', x, rBot + 18);
+    }
+  }
+
+  // ── RIVER ──
+  const riverG = ctx.createLinearGradient(0, rTop, 0, rBot);
+  riverG.addColorStop(0,   '#132E45');
+  riverG.addColorStop(0.5, '#1E4E70');
+  riverG.addColorStop(1,   '#132E45');
+  ctx.fillStyle = riverG; ctx.fillRect(0, rTop, w, rH);
+
+  // Wave rows
+  for (let row = 1; row <= 6; row++) {
+    const y = rTop + (rH / 7) * row;
+    const a = 0.04 + 0.05 * Math.sin(row * 0.9 + wavePhase * 0.5);
+    ctx.strokeStyle = `rgba(147,197,220,${a})`; ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let x = 0; x <= w; x += 3) {
+      const wy = y + Math.sin((x / w) * Math.PI * 5 + wavePhase + row * 0.6) * 3;
+      x === 0 ? ctx.moveTo(x, wy) : ctx.lineTo(x, wy);
+    }
+    ctx.stroke();
+  }
+
+  // Particles
+  ensureParticles(rTop, rH, w);
+  for (const p of PTCL) {
+    const a = 0.12 + 0.22 * Math.sin(p.life * Math.PI);
+    ctx.fillStyle = `rgba(155,205,225,${a})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Current arrows
+  const aDir = S.riverDir === 'ltr' ? 1 : -1;
+  ctx.strokeStyle = 'rgba(181,134,42,0.28)'; ctx.lineWidth = 1;
+  for (let ax = 55; ax < w; ax += 85) {
+    const ay = rTop + rH / 2;
+    const dx = aDir * 20;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay); ctx.lineTo(ax+dx, ay);
+    ctx.moveTo(ax+dx, ay); ctx.lineTo(ax+dx-aDir*6, ay-4);
+    ctx.moveTo(ax+dx, ay); ctx.lineTo(ax+dx-aDir*6, ay+4);
+    ctx.stroke();
+  }
+
+  // Wind arrows
+  if (S.windOn && S.windSpeed > 0) {
+    const wd = S.windDir === 'ltr' ? 1 : -1;
+    ctx.strokeStyle = 'rgba(90,138,87,0.28)'; ctx.lineWidth = 1;
+    for (let ax = 90; ax < w; ax += 85) {
+      const ay = rTop + rH * 0.22;
+      const dx = wd * 16;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay); ctx.lineTo(ax+dx, ay);
+      ctx.moveTo(ax+dx, ay); ctx.lineTo(ax+dx-wd*5, ay-3);
+      ctx.moveTo(ax+dx, ay); ctx.lineTo(ax+dx-wd*5, ay+3);
+      ctx.stroke();
+    }
+  }
+
+  // Ripples
+  for (const rp of ripples) {
+    if (rp.alpha <= 0) continue;
+    ctx.strokeStyle = `rgba(147,197,220,${rp.alpha.toFixed(2)})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(rp.x, rp.y, rp.r * 1.8, rp.r, 0, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // ── PATHS ──
+  const c = compute();
+  if (c.ry > 0) {
+    const sc = rH / c.ry;
+    const endX = startX + c.rx * sc;
+    const aimX = startX + c.bx * sc;
+
+    // Aimed direction
+    ctx.setLineDash([5, 8]);
+    ctx.strokeStyle = 'rgba(43,95,142,0.32)'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(aimX, rTop); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Resultant path
+    ctx.setLineDash([6, 5]);
+    ctx.strokeStyle = 'rgba(192,57,43,0.48)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, rTop); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // x-displacement bracket
+    if (Math.abs(endX - startX) > 14) {
+      const bY = rTop - 20;
+      ctx.strokeStyle = 'rgba(192,57,43,0.45)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(startX, bY); ctx.lineTo(endX, bY);
+      ctx.moveTo(startX, bY-4); ctx.lineTo(startX, bY+4);
+      ctx.moveTo(endX, bY-4); ctx.lineTo(endX, bY+4);
+      ctx.stroke();
+      ctx.font = '500 9px IBM Plex Mono'; ctx.fillStyle = 'rgba(192,57,43,0.65)'; ctx.textAlign = 'center';
+      ctx.fillText('dx = ' + Math.abs(c.drift).toFixed(2) + 'm', (startX+endX)/2, bY - 5);
+    }
+
+    // Landing dot
+    ctx.fillStyle = '#C0392B';
+    ctx.beginPath(); ctx.arc(endX, rTop, 4.5, 0, Math.PI*2); ctx.fill();
+    ctx.font = '500 10px IBM Plex Mono'; ctx.fillStyle = '#C0392B'; ctx.textAlign = 'center';
+    ctx.fillText('⊕ ' + Math.abs(c.drift).toFixed(1)+'m', endX, rTop - 10);
+
+    // Dock marker (quiz: exact point)
+    if (dockTarget !== null) {
+      const dockX = startX + (S.riverDir==='ltr'?1:-1) * (dockTarget / S.riverWidth) * rH / (c.ry / S.riverWidth);
+      // simpler: dock is dockTarget meters in drift direction
+      const dockPx = startX + (c.drift >= 0 ? 1 : -1) * (dockTarget / S.riverWidth) * (rH * Math.abs(c.rx) / c.ry + 0);
+      // just place it as absolute pixel: dockTarget metres scaled to canvas
+      const mPerPx = S.riverWidth / rH; // metres per pixel vertically = also for x
+      const dockAbsX = startX + (S.riverDir==='ltr'?1:-1) * dockTarget / mPerPx * (rH / S.riverWidth);
+      // Actually: canvas x-scale = rH / S.riverWidth (same scale used for paths)
+      const scale = rH / c.ry; // px per (m/s * s) = px per m
+      const dockCanvasX = startX + (S.riverDir==='ltr'?1:-1) * dockTarget * (scale * c.ry / S.riverWidth);
+      // simplest: dockTarget metres along x, 1px = S.riverWidth/rH metres vertically
+      // horizontal scale is same: each metre = rH/S.riverWidth px
+      const pxPerM = rH / S.riverWidth;
+      const dXpx = startX + (S.riverDir==='ltr'?1:-1) * dockTarget * pxPerM;
+      // Draw dock
+      ctx.fillStyle = '#B5862A';
+      ctx.fillRect(dXpx - 6, rTop - 2, 12, 10);
+      ctx.font = 'bold 9px IBM Plex Mono'; ctx.fillStyle = '#B5862A'; ctx.textAlign='center';
+      ctx.fillText('DOCK', dXpx, rTop - 6);
+      // Highlight if within 3m
+      if (Math.abs(Math.abs(c.drift) - dockTarget) < 3) {
+        ctx.strokeStyle = '#5A8A57'; ctx.lineWidth = 2;
+        ctx.strokeRect(dXpx - 8, rTop - 4, 16, 14);
+        ctx.font = '500 10px IBM Plex Mono'; ctx.fillStyle='#5A8A57';
+        ctx.fillText('✓ On target!', dXpx, rTop - 18);
+      }
+    }
+  }
+
+  // ── TRAIL ──
+  if (trail.length > 1) {
+    ctx.strokeStyle = 'rgba(78,155,200,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(trail[0].x, trail[0].y);
+    for (let i = 1; i < trail.length; i++) ctx.lineTo(trail[i].x, trail[i].y);
+    ctx.stroke();
+  }
+
+  // ── BOAT ──
+  let bx_, by_;
+  if ((simRunning || boatT > 0) && c.ry > 0) {
+    const sc = rH / c.ry;
+    bx_ = startX + c.rx * sc * boatT;
+    by_ = startY - c.ry * sc * boatT;
+  } else {
+    bx_ = startX; by_ = startY;
+  }
+  drawBoat(bx_, by_, S.boatAngle * Math.PI / 180);
+
+  // ── VECTORS (drawn at start point when idle, at boat when moving) ──
+  const vox = simRunning && boatT > 0.05 ? bx_ : startX;
+  const voy = simRunning && boatT > 0.05 ? by_ : startY;
+  const VS = 10; // px per m/s
+  drawArrow(vox, voy,  c.bx*VS, -c.by*VS,  '#2B5F8E', 'Vb');
+  if (S.riverSpeed > 0)
+    drawArrow(vox, voy, c.rvx*VS, 0, '#B5862A', 'Vr');
+  if (S.windOn && S.windSpeed > 0)
+    drawArrow(vox, voy + 18, c.wvx*VS, 0, '#5A8A57', 'Vw');
+  if (c.ry > 0)
+    drawArrow(vox, voy, c.rx*VS, -c.ry*VS, 'rgba(192,57,43,0.88)', 'Vres');
+}
+
+function drawBoat(cx, cy, angle) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-angle + Math.PI / 2);
+
+  // Wake glow
+  ctx.fillStyle = 'rgba(147,200,220,0.14)';
+  ctx.beginPath(); ctx.ellipse(0, 9, 5, 10, 0, 0, Math.PI*2); ctx.fill();
+
+  // Hull
+  ctx.fillStyle = '#1A3D5C';
+  ctx.strokeStyle = 'rgba(232,213,163,0.75)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, -14); ctx.bezierCurveTo(7, -5, 7, 4, 5, 9);
+  ctx.lineTo(-5, 9); ctx.bezierCurveTo(-7, 4, -7, -5, 0, -14);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  // Cabin
+  ctx.fillStyle = '#244E70'; ctx.strokeStyle = 'rgba(232,213,163,0.45)'; ctx.lineWidth = .7;
+  ctx.fillRect(-3, -5, 6, 7); ctx.strokeRect(-3, -5, 6, 7);
+
+  // Mast
+  ctx.strokeStyle = 'rgba(181,134,42,0.95)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(0, -19); ctx.stroke();
+
+  // Sail
+  ctx.fillStyle = 'rgba(242,237,215,0.5)';
+  ctx.beginPath(); ctx.moveTo(0, -18); ctx.lineTo(7, -11); ctx.lineTo(0, -5); ctx.closePath(); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawArrow(ox, oy, dx, dy, color, label) {
+  const mag = Math.sqrt(dx*dx + dy*dy);
+  if (mag < 2) return;
+  const ex = ox + dx, ey = oy + dy;
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();
+  const a = Math.atan2(ey-oy, ex-ox);
+  const aL = 9;
+  ctx.beginPath();
+  ctx.moveTo(ex, ey);
+  ctx.lineTo(ex - aL*Math.cos(a-.38), ey - aL*Math.sin(a-.38));
+  ctx.lineTo(ex - aL*Math.cos(a+.38), ey - aL*Math.sin(a+.38));
+  ctx.closePath(); ctx.fill();
+  ctx.font = '600 11px IBM Plex Sans'; ctx.fillStyle = color; ctx.textAlign = 'center';
+  const lx = ex + Math.cos(a + 1.2) * 14;
+  const ly = ey + Math.sin(a + 1.2) * 14;
+  ctx.fillText(label, lx, ly);
+}
+
+// ═══════════════════════════════════════════════
+// MAIN LOOP (single RAF, handles everything)
+// ═══════════════════════════════════════════════
+let prevTS = null;
+function loop(ts) {
+  const dt = prevTS ? Math.min((ts - prevTS) / 1000, 0.05) : 0;
+  prevTS = ts;
+
+  wavePhase += dt * 0.85;
+  const { rTop, rH, w, startX, startY } = geo();
+  stepParticles(rTop, rH, w, dt);
+  stepRipples(dt);
+
+  // Sim step
+  if (simRunning) {
+    const c = compute();
+    if (c.ry > 0) {
+      boatT += dt / c.t;
+      const sc = rH / c.ry;
+      const bx_ = startX + c.rx * sc * boatT;
+      const by_ = startY - c.ry * sc * boatT;
+      trail.push({ x: bx_, y: by_ });
+      // Ripple every ~0.4s of trail
+      if (trail.length % 20 === 0) addRipple(bx_, by_);
+      if (boatT >= 1) {
+        boatT = 1;
+        stopSim();
+        showToast('Crossing complete!');
+      }
+    }
+  }
+
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════
+// SIMULATION CONTROL
+// ═══════════════════════════════════════════════
+function toggleSim() {
+  simRunning ? stopSim() : startSim();
+}
+function startSim() {
+  const c = compute();
+  if (c.ry <= 0) { showToast('Heading must point across the river — increase the angle!'); return; }
+  simRunning = true; boatT = 0; trail = []; ripples = [];
+  document.getElementById('launchBtn').textContent = 'Stop';
+}
+function stopSim() {
+  simRunning = false;
+  document.getElementById('launchBtn').textContent = 'Launch';
+}
+function resetSim() {
+  stopSim(); boatT = 0; trail = []; ripples = [];
+  dockTarget = null;
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ═══════════════════════════════════════════════
+// PROFESSOR / QUIZ
+// ═══════════════════════════════════════════════
+const QUESTIONS = [
+  {
+    id: 'shortest_time',
+    face: '⚓',
+    q: () => `<strong>Ahoy, student!</strong> I've sailed these rivers for 40 years and I <em>still</em> see people getting this wrong.<br><br>What heading gives the sailor the <em>shortest crossing time?</em> And why doesn't the current speed matter?`,
+    opts: ['Let me try on the simulator', "I know — check my answer"],
+    onOpt: [
+      () => showToast('Set angle to 90° — watch the crossing time!'),
+      () => openAnswerPanel('shortest_time'),
+    ],
+  },
+  {
+    id: 'shortest_dist',
+    face: '🧭',
+    q: () => `<strong>Pfft. Shortest <em>time</em> is easy.</strong> Here's a harder one:<br><br>What heading minimizes the <em>total distance traveled</em>? (Hint: it is NOT 90°, and it depends on the current speed.)`,
+    opts: ['Experiment with the simulator', 'I calculated it'],
+    onOpt: [
+      () => showToast('Watch Total displacement as you change the angle!'),
+      () => openAnswerPanel('shortest_dist'),
+    ],
+  },
+  {
+    id: 'time_limit',
+    face: '🌊',
+    q: () => `<strong>Emergency!</strong> The gate on the other side slams shut in <strong>25 seconds.</strong><br>The river is <strong>${S.riverWidth} m</strong> wide right now.<br><br>What is the <em>minimum boat speed</em> needed to make it?`,
+    opts: ['I worked it out', 'Give me a hint'],
+    onOpt: [
+      () => openAnswerPanel('time_limit'),
+      () => showToast('t = W / Vy. For min speed, set θ=90° so Vy = Vboat. Solve for Vboat.'),
+    ],
+  },
+  {
+    id: 'exact_point',
+    face: '🗺️',
+    q: () => `<strong>Precision docking!</strong> The dock is exactly <strong>30 m ${S.riverDir==='ltr'?'right':'left'}</strong> of your start point. Current is <strong>${S.riverSpeed.toFixed(1)} m/s.</strong><br><br>Configure the simulator so the boat lands at the dock. I'll check it live.`,
+    opts: ['Done — check my setup', 'I need a hint'],
+    onOpt: [
+      () => { dockTarget = 30; checkExactPoint(); },
+      () => { dockTarget = 30; showToast('Drift = Vx·t = (Vb·cosθ + Vr)·(W / Vb·sinθ). Aim for 30m!'); },
+    ],
+  },
+  {
+    id: 'zero_drift',
+    face: '🧑‍✈️',
+    q: () => `<strong>The captain is obsessed</strong> with landing <em>directly opposite</em> — zero drift, not a centimetre off.<br>Current = <strong>${S.riverSpeed.toFixed(1)} m/s</strong>, boat = <strong>${S.boatSpeed.toFixed(1)} m/s.</strong><br><br>At what angle must the boat head?`,
+    opts: ['I calculated the angle', 'Try it on the simulator'],
+    onOpt: [
+      () => openAnswerPanel('zero_drift'),
+      () => showToast('Aim upstream until drift reads 0! Verify with the resultant arrow.'),
+    ],
+  },
+];
+
+function showProf(override) {
+  const q = override || QUESTIONS[qIdx % QUESTIONS.length];
+  document.getElementById('profFace').textContent = q.face;
+  document.getElementById('profQ').innerHTML = q.q();
+  const optsEl = document.getElementById('profOpts');
+  optsEl.innerHTML = '';
+  q.opts.forEach((label, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'prof-opt';
+    btn.textContent = label;
+    btn.onclick = () => { hideProf(); q.onOpt[i](); };
+    optsEl.appendChild(btn);
+  });
+  document.getElementById('prof-wrap').classList.add('show');
+}
+
+function hideProf() {
+  document.getElementById('prof-wrap').classList.remove('show');
+  qIdx++;
+  scheduleProf();
+}
+
+let profTimer = null;
+function scheduleProf() {
+  clearTimeout(profTimer);
+  profTimer = setTimeout(() => {
+    if (!simRunning) showProf();
+    else scheduleProf();
+  }, 35000 + Math.random() * 40000);
+}
+
+// ═══════════════════════════════════════════════
+// ANSWER PANELS
+// ═══════════════════════════════════════════════
+const ANS = {
+  shortest_time: {
+    title: 'Shortest Crossing Time',
+    hint: 't = W / Vy = W / (Vboat·sinθ). Minimise t by maximising Vy. When is sinθ = 1?',
+    fields: [
+      { label: 'Optimal heading angle (°)', key: 'angle' },
+      { label: 'Minimum time formula', key: 'formula' },
+    ],
+    check(vals) {
+      const a = parseFloat(vals.angle);
+      if (Math.abs(a - 90) < 4 && vals.formula && vals.formula.trim().length > 3)
+        return { ok:true, msg:`Correct! θ = 90° maximises Vy = Vboat. Time = W ÷ Vboat = ${S.riverWidth} ÷ ${S.boatSpeed} = ${(S.riverWidth/S.boatSpeed).toFixed(2)} s. The current is perpendicular and does NOT affect crossing time.` };
+      return { ok:false, msg:'Not quite. At 90°, sinθ = 1 so Vy = Vboat (maximum). t = W / Vboat. The current only causes drift, never delays the crossing.' };
+    },
+  },
+  shortest_dist: {
+    title: 'Shortest Path Distance',
+    hint: 'Need Vx_resultant = 0, so Vb·cosθ + Vr = 0. That means cosθ = −Vr/Vb, i.e. θ = 180° − arccos(Vr/Vb).',
+    fields: [{ label: 'Required heading angle (°)', key: 'angle' }],
+    check(vals) {
+      if (S.riverSpeed >= S.boatSpeed)
+        return { ok:false, msg:`Impossible here — river (${S.riverSpeed} m/s) ≥ boat (${S.boatSpeed} m/s). Increase boat speed first!` };
+      const ideal = 180 - Math.acos(S.riverSpeed / S.boatSpeed) * 180 / Math.PI;
+      const a = parseFloat(vals.angle);
+      if (Math.abs(a - ideal) < 4)
+        return { ok:true, msg:`Yes! θ = 180° − arccos(${S.riverSpeed}/${S.boatSpeed}) ≈ ${ideal.toFixed(1)}°. The upstream component of Vb exactly cancels the current → zero drift → shortest path.` };
+      return { ok:false, msg:`The angle should be ≈ ${ideal.toFixed(1)}°. Formula: θ = 180° − arccos(Vr / Vb).` };
+    },
+  },
+  time_limit: {
+    title: 'Race the Clock — 25 Seconds',
+    hint: 't = W / (Vboat·sinθ). For minimum Vboat, use θ = 90° (sinθ = 1). Then Vboat = W / t.',
+    fields: [{ label: 'Min boat speed needed (m/s)', key: 'speed' }],
+    check(vals) {
+      const needed = S.riverWidth / 25;
+      const ans = parseFloat(vals.speed);
+      if (Math.abs(ans - needed) < 0.6)
+        return { ok:true, msg:`Correct! Vboat = W ÷ t = ${S.riverWidth} ÷ 25 = ${needed.toFixed(2)} m/s (at θ = 90°).` };
+      return { ok:false, msg:`Not quite. Vboat = ${S.riverWidth} ÷ 25 = ${needed.toFixed(2)} m/s. Did you assume θ = 90°?` };
+    },
+  },
+  zero_drift: {
+    title: 'Zero Drift — Land Directly Opposite',
+    hint: 'Vx_res = Vb·cosθ + Vr = 0 → cosθ = −Vr/Vb → θ = 180° − arccos(Vr/Vb).',
+    fields: [{ label: 'Heading angle to aim (°)', key: 'angle' }],
+    check(vals) {
+      if (S.riverSpeed >= S.boatSpeed)
+        return { ok:false, msg:`Impossible — river (${S.riverSpeed} m/s) ≥ boat (${S.boatSpeed} m/s). The boat cannot fight the current.` };
+      const ideal = 180 - Math.acos(S.riverSpeed / S.boatSpeed) * 180 / Math.PI;
+      const a = parseFloat(vals.angle);
+      if (Math.abs(a - ideal) < 3.5)
+        return { ok:true, msg:`Exactly right! θ = 180° − arccos(${S.riverSpeed}/${S.boatSpeed}) ≈ ${ideal.toFixed(1)}°. Set it in the simulator and watch drift → 0!` };
+      return { ok:false, msg:`Need θ ≈ ${ideal.toFixed(1)}°. Use: θ = 180° − arccos(Vr / Vb).` };
+    },
+  },
+};
+
+function openAnswerPanel(type) {
+  const cfg = ANS[type];
+  if (!cfg) return;
+  currentAns = type;
+  document.getElementById('ansTitle').textContent = cfg.title;
+  document.getElementById('ansHint').textContent  = cfg.hint;
+  const fields = document.getElementById('ansFields');
+  fields.innerHTML = '';
+  cfg.fields.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'ans-row';
+    row.innerHTML = `<span class="ans-label">${f.label}</span><input class="ans-input" data-key="${f.key}" placeholder="enter value">`;
+    fields.appendChild(row);
+  });
+  document.getElementById('ansFeedback').className = 'ans-feedback';
+  document.getElementById('ans-panel').classList.add('open');
+}
+
+function checkExactPoint() {
+  const c = compute();
+  if (c.ry <= 0) { showToast('Boat must cross the river first!'); return; }
+  const drift = Math.abs(c.drift);
+  if (Math.abs(drift - 30) < 3)
+    showToast('✓ On the dock! Drift = ' + drift.toFixed(1) + ' m — close enough!');
+  else
+    showToast('Drift = ' + drift.toFixed(1) + ' m. Need 30 m. Adjust your angle or speed.');
+  dockTarget = 30;
+}
+
+function checkAnswer() {
+  const cfg = ANS[currentAns];
+  if (!cfg) return;
+  const vals = {};
+  document.querySelectorAll('.ans-input').forEach(inp => vals[inp.dataset.key] = inp.value);
+  const result = cfg.check(vals);
+  const fb = document.getElementById('ansFeedback');
+  fb.className = 'ans-feedback show ' + (result.ok ? 'correct' : 'wrong');
+  fb.textContent = (result.ok ? '✓ ' : '✗ ') + result.msg;
+}
+
+function closeAns() {
+  document.getElementById('ans-panel').classList.remove('open');
+  currentAns = null;
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('resize', () => { resize(); });
+resize();
+update();
+requestAnimationFrame(loop);
+
+// First professor popup at 20s
+setTimeout(() => showProf(), 20000);
+scheduleProf();
+</script>
+</body>
+</html>

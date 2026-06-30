@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cannon Carnival — by projectAdnan</title>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1A1612;
+    --panel: #211B16;
+    --card: #2A231C;
+    --border: #3D332688;
+    --border-solid: #4A3D2C;
+    --brass: #B5732A;
+    --brass-bright: #D99A4E;
+    --brass-dim: #6E4A1F;
+    --canvas: #E8DCC4;
+    --canvas-dim: #B8AC92;
+    --verdigris: #5C7A6E;
+    --verdigris-bright: #7FA294;
+    --oxblood: #8B2E2E;
+    --oxblood-bright: #C24A4A;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--ink);
+    color: var(--canvas);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at top left, rgba(181,115,42,0.05), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(92,122,110,0.04), transparent 50%);
+  }
+
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 64px;
+    background: linear-gradient(180deg, #211B16 0%, #1A1612 100%);
+    border-bottom: 2px solid var(--border-solid);
+    display: flex; align-items: center; padding: 0 28px;
+    gap: 18px;
+  }
+
+  header::after {
+    content: '';
+    position: absolute; bottom: -2px; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--brass-dim) 20%, var(--brass) 50%, var(--brass-dim) 80%, transparent);
+  }
+
+  .header-logo {
+    font-family: 'Bitter', serif;
+    font-size: 21px; font-weight: 900;
+    letter-spacing: 0.03em;
+    color: var(--canvas);
+    position: relative;
+  }
+
+  .header-logo .accent { color: var(--brass-bright); }
+
+  .header-sub {
+    font-size: 11px; color: var(--canvas-dim); letter-spacing: 0.12em;
+    text-transform: uppercase; font-weight: 500;
+    border-left: 1px solid var(--border-solid); padding-left: 18px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 330px 1fr;
+    grid-template-rows: 1fr 168px;
+    height: 100vh;
+    padding-top: 64px;
+  }
+
+  .controls {
+    grid-row: 1 / 3;
+    background: var(--panel);
+    border-right: 2px solid var(--border-solid);
+    overflow-y: auto;
+    padding: 22px 18px 26px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-solid) transparent;
+  }
+
+  .controls::-webkit-scrollbar { width: 5px; }
+  .controls::-webkit-scrollbar-thumb { background: var(--border-solid); border-radius: 2px; }
+
+  .section-label {
+    font-family: 'Bitter', serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--brass);
+    margin: 22px 0 12px; padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label:first-child { margin-top: 2px; }
+  .section-label::before {
+    content: '';
+    width: 4px; height: 4px;
+    background: var(--brass);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* ── ELEVATION WHEEL ── */
+  .wheel-module {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 18px 0 8px;
+    background: radial-gradient(ellipse at center top, rgba(181,115,42,0.06), transparent 70%);
+  }
+
+  .wheel-outer {
+    position: relative;
+    width: 158px; height: 158px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .wheel-outer:active { cursor: grabbing; }
+
+  .wheel-ring {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background:
+      repeating-conic-gradient(from 0deg, #2A231C 0deg 1.5deg, #1E1812 1.5deg 9deg);
+    box-shadow:
+      inset 0 0 0 2px var(--border-solid),
+      inset 0 4px 14px rgba(0,0,0,0.6),
+      0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  .wheel-spokes {
+    position: absolute; inset: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3D3225, #1A1612 75%);
+    box-shadow: inset 0 0 0 1px var(--border-solid), 0 1px 4px rgba(0,0,0,0.5);
+    transform-origin: center;
+  }
+
+  .wheel-spokes svg { width: 100%; height: 100%; display: block; }
+
+  .wheel-hub {
+    position: absolute; top: 50%; left: 50%;
+    width: 26px; height: 26px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--brass-bright), var(--brass-dim) 80%);
+    box-shadow: 0 0 0 2px #1A1612, 0 0 0 3px var(--border-solid), 0 2px 6px rgba(0,0,0,0.5);
+  }
+
+  .wheel-pointer {
+    position: absolute; top: -3px; left: 50%;
+    width: 3px; height: 14px;
+    background: var(--brass-bright);
+    transform: translateX(-50%);
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(217,154,78,0.6);
+  }
+
+  .wheel-readout {
+    margin-top: 14px;
+    text-align: center;
+  }
+
+  .wheel-readout .angle-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 30px; font-weight: 600;
+    color: var(--brass-bright);
+    line-height: 1;
+  }
+
+  .wheel-readout .angle-unit {
+    font-size: 13px; color: var(--canvas-dim);
+  }
+
+  .wheel-readout .angle-caption {
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--canvas-dim); margin-top: 4px;
+  }
+
+  .wheel-hint {
+    font-size: 9.5px; color: var(--canvas-dim); opacity: 0.6;
+    margin-top: 6px; letter-spacing: 0.04em;
+  }
+
+  /* number entry still available, smaller, secondary */
+  .wheel-manual {
+    display: flex; align-items: center; gap: 6px; margin-top: 10px;
+  }
+  .wheel-manual input {
+    width: 64px; text-align: center;
+    background: var(--card); border: 1px solid var(--border-solid);
+    color: var(--canvas); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; padding: 5px 4px; border-radius: 4px; outline: none;
+  }
+  .wheel-manual input:focus { border-color: var(--brass); }
+  .wheel-manual span { font-size: 10px; color: var(--canvas-dim); }
+
+  /* ── STANDARD FIELDS ── */
+  .input-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 9px;
+    margin-bottom: 9px;
+  }
+  .input-row.single { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .field label {
+    font-size: 10px; color: var(--canvas-dim); letter-spacing: 0.09em;
+    text-transform: uppercase; font-weight: 500;
+  }
+
+  .field input {
+    background: var(--card);
+    border: 1px solid var(--border-solid);
+    color: var(--canvas);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    padding: 9px 11px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  .field input:focus {
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px rgba(181,115,42,0.15);
+  }
+
+  .field input.verdigris:focus {
+    border-color: var(--verdigris-bright);
+    box-shadow: 0 0 0 3px rgba(127,162,148,0.15);
+  }
+
+  .field .unit { font-size: 10px; color: var(--brass-dim); margin-left: 2px; }
+
+  .wind-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 22px 0 12px; padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wind-header span {
+    font-family: 'Bitter', serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--brass);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .wind-header span::before {
+    content: ''; width: 4px; height: 4px; background: var(--brass); transform: rotate(45deg); flex-shrink: 0;
+  }
+
+  .toggle {
+    position: relative; width: 40px; height: 22px; cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: var(--card); border: 1px solid var(--border-solid);
+    border-radius: 20px; transition: background 0.25s, border-color 0.25s;
+  }
+  .toggle-thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 14px; height: 14px;
+    background: var(--canvas-dim); border-radius: 50%;
+    transition: transform 0.25s, background 0.25s;
+  }
+  .toggle input:checked ~ .toggle-track {
+    background: rgba(127,162,148,0.15); border-color: var(--verdigris-bright);
+  }
+  .toggle input:checked ~ .toggle-thumb {
+    transform: translateX(18px); background: var(--verdigris-bright);
+  }
+
+  .wind-fields { overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; }
+  .wind-fields.hidden { max-height: 0; opacity: 0; }
+  .wind-fields.visible { max-height: 200px; opacity: 1; }
+
+  .fire-btn {
+    width: 100%; margin-top: 22px;
+    padding: 15px;
+    background: linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 55%, var(--brass-dim) 100%);
+    color: #1A1612; font-family: 'Bitter', serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; border: none; border-radius: 4px;
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 0 var(--brass-dim), 0 6px 16px rgba(0,0,0,0.4);
+    border: 1px solid #8B5A1F;
+  }
+  .fire-btn:hover { box-shadow: 0 4px 0 var(--brass-dim), 0 8px 22px rgba(181,115,42,0.3); }
+  .fire-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--brass-dim); }
+
+  .reset-btn {
+    width: 100%; margin-top: 9px;
+    padding: 10px;
+    background: transparent; color: var(--canvas-dim);
+    border: 1px solid var(--border-solid); border-radius: 4px;
+    font-size: 12px; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    letter-spacing: 0.04em;
+  }
+  .reset-btn:hover { border-color: var(--oxblood-bright); color: var(--oxblood-bright); }
+
+  .canvas-wrap {
+    position: relative;
+    background: var(--ink);
+    overflow: hidden;
+  }
+
+  #simCanvas { display: block; width: 100%; height: 100%; }
+
+  .canvas-overlay {
+    position: absolute; top: 18px; right: 18px;
+    display: flex; gap: 8px;
+  }
+
+  .pill {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 5px 12px; border-radius: 3px;
+    background: rgba(26,22,18,0.75); border: 1px solid var(--border-solid);
+    color: var(--canvas-dim); letter-spacing: 0.04em;
+    backdrop-filter: blur(6px);
+  }
+  .pill.live { color: var(--verdigris-bright); border-color: rgba(127,162,148,0.4); }
+  .pill.live::before { content: '● '; font-size: 8px; }
+
+  .results {
+    background: var(--panel);
+    border-top: 2px solid var(--border-solid);
+    padding: 16px 28px;
+    display: flex; gap: 0; overflow-x: auto;
+    scrollbar-width: none;
+    align-items: stretch;
+  }
+  .results::-webkit-scrollbar { display: none; }
+
+  .stat {
+    flex: 0 0 auto;
+    padding: 0 26px 0 0;
+    margin-right: 26px;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 3px;
+  }
+  .stat:last-child { border-right: none; }
+
+  .stat-label {
+    font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--canvas-dim); font-weight: 600; font-family: 'Inter', sans-serif;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 21px; font-weight: 600;
+    color: var(--canvas); line-height: 1;
+  }
+  .stat-value.brass { color: var(--brass-bright); }
+  .stat-value.verdigris { color: var(--verdigris-bright); }
+  .stat-value.ox { color: var(--oxblood-bright); }
+
+  .stat-unit { font-size: 10px; color: var(--canvas-dim); font-family: 'JetBrains Mono', monospace; }
+  .stat-sub { font-size: 10px; color: var(--canvas-dim); font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
+
+  .no-results {
+    display: flex; align-items: center;
+    font-size: 12.5px; color: var(--canvas-dim); letter-spacing: 0.03em;
+    font-style: italic; font-family: 'Bitter', serif;
+  }
+
+  .error-msg {
+    color: var(--oxblood-bright); font-size: 11px;
+    margin-top: 8px; padding: 7px 11px;
+    background: rgba(139,46,46,0.1);
+    border-radius: 3px; border-left: 2px solid var(--oxblood-bright);
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+
+  .terrain-info {
+    font-size: 10.5px; color: var(--canvas-dim); margin-top: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 7px 9px; background: var(--card);
+    border-radius: 3px; border-left: 2px solid var(--verdigris);
+  }
+
+  @media (max-width: 768px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto 50vh auto; }
+    .controls { grid-row: 1; border-right: none; border-bottom: 2px solid var(--border-solid); max-height: 42vh; }
+    .canvas-wrap { grid-row: 2; }
+    .results { grid-row: 3; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">Cannon <span class="accent">Carnival</span></div>
+  <div class="header-sub">Projectile Range — projectAdnan</div>
+</header>
+
+<div class="app">
+
+  <aside class="controls">
+
+    <div class="section-label">Elevation &amp; Charge</div>
+    <div class="wheel-module">
+      <div class="wheel-outer" id="wheelOuter">
+        <div class="wheel-ring"></div>
+        <div class="wheel-spokes" id="wheelSpokes">
+          <svg viewBox="0 0 158 158">
+            <g stroke="#5C4A32" stroke-width="3" stroke-linecap="round">
+              <line x1="79" y1="20" x2="79" y2="138"/>
+              <line x1="20" y1="79" x2="138" y2="79"/>
+              <line x1="35" y1="35" x2="123" y2="123"/>
+              <line x1="123" y1="35" x2="35" y2="123"/>
+            </g>
+            <circle cx="79" cy="79" r="58" fill="none" stroke="#4A3D2C" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="wheel-pointer"></div>
+        <div class="wheel-hub"></div>
+      </div>
+      <div class="wheel-readout">
+        <span class="angle-val" id="angleVal">45</span><span class="angle-unit">°</span>
+        <div class="angle-caption">Barrel Elevation</div>
+      </div>
+      <div class="wheel-hint">drag the wheel to set angle</div>
+      <div class="wheel-manual">
+        <input type="number" id="launchAngle" value="45" min="0" max="90">
+        <span>degrees, typed entry</span>
+      </div>
+    </div>
+
+    <div class="section-label">Powder Charge</div>
+    <div class="input-row single">
+      <div class="field">
+        <label>Muzzle Velocity <span class="unit">m/s</span></label>
+        <input type="number" id="launchVelocity" value="50" min="1" max="500" placeholder="1–500">
+      </div>
+    </div>
+
+    <div class="section-label">Platform</div>
+    <div class="input-row single">
+      <div class="field">
+        <label>Platform Height <span class="unit">m</span></label>
+        <input type="number" id="platformHeight" value="0" min="0" max="100" placeholder="0–100">
+      </div>
+    </div>
+
+    <div class="section-label">Terrain</div>
+    <div class="input-row single">
+      <div class="field">
+        <label>Ground Slope <span class="unit">°</span></label>
+        <input type="number" id="groundSlope" value="0" min="-45" max="45" placeholder="-45 to +45" class="verdigris">
+      </div>
+    </div>
+    <div class="terrain-info" id="terrainInfo">Flat ground — cannon sits level</div>
+
+    <div class="wind-header">
+      <span>Wind</span>
+      <label class="toggle">
+        <input type="checkbox" id="windToggle">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+
+    <div class="wind-fields hidden" id="windFields">
+      <div class="input-row">
+        <div class="field">
+          <label>Wind Speed <span class="unit">m/s</span></label>
+          <input type="number" id="windSpeed" value="10" min="0" max="80" placeholder="m/s" class="verdigris">
+        </div>
+        <div class="field">
+          <label>Wind Angle <span class="unit">°</span></label>
+          <input type="number" id="windAngle" value="0" min="0" max="360" placeholder="0–360" class="verdigris">
+        </div>
+      </div>
+      <div class="terrain-info" style="border-left-color: var(--brass-dim); margin-bottom: 4px;">
+        0° headwind · 90° crosswind · 180° tailwind
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <button class="fire-btn" id="fireBtn">Fire</button>
+    <button class="reset-btn" id="resetBtn">Reset Range</button>
+
+  </aside>
+
+  <main class="canvas-wrap">
+    <canvas id="simCanvas"></canvas>
+    <div class="canvas-overlay">
+      <div class="pill" id="statusPill">Loaded</div>
+    </div>
+  </main>
+
+  <section class="results" id="resultsStrip">
+    <div class="no-results">Fire the cannon to record results →</div>
+  </section>
+
+</div>
+
+<script>
+const g = 9.81;
+function toRad(deg) { return deg * Math.PI / 180; }
+function toDeg(rad) { return rad * 180 / Math.PI; }
+
+/* ───────────────── SHARED STATE (declared early to avoid TDZ errors) ───────────────── */
+/* ───────────────── SHARED STATE (declared early to avoid TDZ errors) ───────────────── */
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+let animFrame = null;
+let particles = [];
+let smokeParticles = [];
+let currentResult = null;
+let isAnimating = false;
+
+/* ───────────────── ELEVATION WHEEL ───────────────── */
+const wheelOuter = document.getElementById('wheelOuter');
+const wheelSpokes = document.getElementById('wheelSpokes');
+const angleValEl = document.getElementById('angleVal');
+const angleInput = document.getElementById('launchAngle');
+
+let wheelRotation = 45 * 3; // visual spin multiplier, independent of angle range
+let currentAngle = 45;
+let dragging = false;
+let lastPointerAngle = 0;
+let dragAccum = 0;
+
+function setAngle(angle, fromWheel) {
+  angle = Math.max(0, Math.min(90, angle));
+  currentAngle = angle;
+  angleValEl.textContent = Math.round(angle);
+  if (!fromWheel) angleInput.value = Math.round(angle);
+  wheelSpokes.style.transform = `rotate(${wheelRotation}deg)`;
+  if (currentResult && !isAnimating) drawScene(currentResult, 1);
+  else if (!isAnimating) drawIdle();
+}
+
+function pointerAngleFromEvent(e) {
+  const rect = wheelOuter.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI;
+}
+
+function startDrag(e) {
+  dragging = true;
+  lastPointerAngle = pointerAngleFromEvent(e);
+  wheelOuter.style.cursor = 'grabbing';
+  e.preventDefault();
+}
+
+function duringDrag(e) {
+  if (!dragging) return;
+  const pa = pointerAngleFromEvent(e);
+  let delta = pa - lastPointerAngle;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+  lastPointerAngle = pa;
+
+  wheelRotation += delta;
+  // dragging the wheel clockwise (positive delta) raises the barrel angle
+  dragAccum += delta;
+  const angleDelta = delta * 0.35; // sensitivity
+  setAngle(currentAngle + angleDelta, true);
+  e.preventDefault();
+}
+
+function endDrag() { dragging = false; wheelOuter.style.cursor = 'grab'; }
+
+wheelOuter.addEventListener('mousedown', startDrag);
+window.addEventListener('mousemove', duringDrag);
+window.addEventListener('mouseup', endDrag);
+wheelOuter.addEventListener('touchstart', startDrag, { passive: false });
+window.addEventListener('touchmove', duringDrag, { passive: false });
+window.addEventListener('touchend', endDrag);
+
+angleInput.addEventListener('input', () => {
+  const v = parseFloat(angleInput.value);
+  if (!isNaN(v)) {
+    wheelRotation += (v - currentAngle) * (1/0.35) * 0; // keep wheel visual independent on typed entry
+    setAngle(v, false);
+  }
+});
+
+setAngle(45, false);
+
+/* ───────────────── PHYSICS ───────────────── */
+function simulate(params) {
+  const { v0, launchAngle, platformHeight, windEnabled, windSpeed, windAngle, groundSlope } = params;
+
+  const vx0 = v0 * Math.cos(toRad(launchAngle));
+  const vy0 = v0 * Math.sin(toRad(launchAngle));
+
+  const windAngleRad = toRad(windAngle);
+  const wx = windEnabled ? -windSpeed * Math.cos(windAngleRad) : 0;
+  const k = 0.003;
+
+  const dt = 0.01;
+  let x = 0, y = platformHeight;
+  let vx = vx0, vy = vy0;
+
+  const path = [{ x, y, t: 0 }];
+  let t = 0;
+  let maxY = y;
+  let maxV = Math.hypot(vx0, vy0);
+  const maxIter = 100000;
+  let i = 0;
+
+  const slopeRad = toRad(groundSlope);
+  const slopeTan = Math.tan(slopeRad);
+
+  while (i++ < maxIter) {
+    const relVx = vx - wx;
+    const ax = -k * relVx * Math.abs(relVx);
+    const ay = -g;
+
+    vx += ax * dt;
+    vy += ay * dt;
+    x += vx * dt;
+    y += vy * dt;
+    t += dt;
+
+    const speed = Math.hypot(vx, vy);
+    if (speed > maxV) maxV = speed;
+    if (y > maxY) maxY = y;
+
+    path.push({ x, y, t });
+
+    const groundY = x * slopeTan;
+    if (y <= groundY && t > 0.05) {
+      const prev = path[path.length - 2];
+      const groundPrev = prev.x * slopeTan;
+      const denom = (prev.y - groundPrev) - (y - groundY);
+      const frac = denom !== 0 ? (prev.y - groundPrev) / denom : 1;
+      const landX = prev.x + frac * (x - prev.x);
+      const landY = groundPrev + frac * (groundY - groundPrev);
+      path[path.length - 1] = { x: landX, y: landY, t };
+      x = landX; y = landY;
+      break;
+    }
+    if (x < -5) break;
+  }
+
+  const halfMax = (maxY + platformHeight) / 2;
+  let pt1 = null, pt2 = null;
+  for (let j = 1; j < path.length - 1; j++) {
+    if (!pt1 && path[j].y >= halfMax && path[j-1].y < halfMax) pt1 = path[j];
+    if (pt1 && !pt2 && path[j].y <= halfMax && path[j-1].y > halfMax && j > 2) pt2 = path[j];
+  }
+
+  const impactSpeed = Math.hypot(vx, vy);
+  const impactAngle = Math.abs(toDeg(Math.atan2(Math.abs(vy), Math.abs(vx) || 0.0001)));
+
+  return { path, range: x, maxHeight: maxY - platformHeight, flightTime: t, maxVelocity: maxV, impactSpeed, impactAngle, pt1, pt2, landX: x, landY: y };
+}
+
+/* ───────────────── CANVAS ───────────────── */
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  if (currentResult) drawScene(currentResult, 1);
+  else drawIdle();
+}
+
+function worldToScreen(wx, wy, result) {
+  const W = canvas.width, H = canvas.height;
+  const pad = 64 * devicePixelRatio;
+
+  const allX = result.path.map(p => p.x);
+  const allY = result.path.map(p => p.y);
+  const minX = Math.min(0, ...allX);
+  const maxX = Math.max(...allX) * 1.08 || 1;
+  const minY = Math.min(0, ...allY);
+  const maxY = Math.max(...allY) * 1.1 || 1;
+
+  const scaleX = (W - pad*2) / (maxX - minX || 1);
+  const scaleY = (H - pad*2) / (maxY - minY || 1);
+  const scale = Math.min(scaleX, scaleY);
+
+  const ox = pad - minX * scale + (W - pad*2 - (maxX - minX) * scale) / 2;
+  const oy = H - pad + minY * scale - (H - pad*2 - (maxY - minY) * scale) / 2;
+
+  return { sx: ox + wx * scale, sy: oy - wy * scale, scale, ox, oy };
+}
+
+function drawGrid(result) {
+  const W = canvas.width, H = canvas.height;
+  const dpr = devicePixelRatio;
+  const range = result.range || 100;
+  const worldW = range * 1.2;
+  const rawStep = worldW / 8 || 10;
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const niceStep = Math.ceil(rawStep / mag) * mag;
+
+  ctx.strokeStyle = 'rgba(74,61,44,0.4)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([1, 5]);
+  ctx.font = `${9*dpr}px JetBrains Mono, monospace`;
+  ctx.fillStyle = 'rgba(184,172,146,0.55)';
+  ctx.textAlign = 'center';
+
+  for (let gx = 0; gx <= range * 1.3; gx += niceStep) {
+    const { sx, sy } = worldToScreen(gx, 0, result);
+    if (sx < 20*dpr || sx > W - 20*dpr) continue;
+    ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke();
+    ctx.fillText(`${Math.round(gx)}m`, sx, sy + 16*dpr);
+  }
+
+  const ph = parseFloat(document.getElementById('platformHeight').value) || 0;
+  const yMax = Math.max(result.maxHeight + ph, 10);
+  ctx.textAlign = 'right';
+  for (let gy = 0; gy <= yMax * 1.2; gy += niceStep) {
+    const { sx, sy } = worldToScreen(0, gy, result);
+    if (sy < 20*dpr || sy > H - 20*dpr) continue;
+    ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke();
+    ctx.fillText(`${Math.round(gy)}m`, sx - 4*dpr, sy + 4*dpr);
+  }
+  ctx.setLineDash([]);
+}
+
+function drawGround(result) {
+  const W = canvas.width, H = canvas.height;
+  const slope = parseFloat(document.getElementById('groundSlope').value) || 0;
+
+  ctx.beginPath();
+  const startPt = worldToScreen(-10, -10 * Math.tan(toRad(slope)), result);
+  const endX = (result.range || 100) * 1.3;
+  const endPt = worldToScreen(endX, endX * Math.tan(toRad(slope)), result);
+  ctx.moveTo(0, startPt.sy);
+  ctx.lineTo(endPt.sx * 1.5, endPt.sy);
+  ctx.strokeStyle = 'rgba(92,122,110,0.55)';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  ctx.lineTo(W * 1.5, H);
+  ctx.lineTo(0, H);
+  ctx.closePath();
+  const fillGrad = ctx.createLinearGradient(0, startPt.sy, 0, H);
+  fillGrad.addColorStop(0, 'rgba(92,122,110,0.08)');
+  fillGrad.addColorStop(1, 'rgba(38,32,24,0.25)');
+  ctx.fillStyle = fillGrad;
+  ctx.fill();
+
+  // hatch texture on ground
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, startPt.sy); ctx.lineTo(endPt.sx*1.5, endPt.sy);
+  ctx.lineTo(W*1.5, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.clip();
+  ctx.strokeStyle = 'rgba(92,122,110,0.08)';
+  ctx.lineWidth = 1;
+  const slopeRad = toRad(slope);
+  for (let hx = -200; hx < W + 200; hx += 14) {
+    ctx.beginPath();
+    ctx.moveTo(hx, startPt.sy - 10);
+    ctx.lineTo(hx - 40, H + 40);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCannon(result, progress) {
+  const dpr = devicePixelRatio;
+  const ph = parseFloat(document.getElementById('platformHeight').value) || 0;
+  const slope = parseFloat(document.getElementById('groundSlope').value) || 0;
+  const effectiveAngle = currentAngle;
+
+  const { sx: cx, sy: cyGround } = worldToScreen(0, ph + 0 * Math.tan(toRad(slope)), result);
+  const { sy: groundYAtZero } = worldToScreen(0, 0, result);
+  const cy = cyGround;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  // tilt the whole base+barrel assembly to match ground slope
+  ctx.rotate(toRad(slope));
+
+  const pw = 30*dpr;
+
+  if (ph > 0) {
+    const pillarH = (groundYAtZero - cy) / Math.cos(toRad(slope));
+    const grad = ctx.createLinearGradient(0, 0, 0, pillarH);
+    grad.addColorStop(0, '#4A3D2C');
+    grad.addColorStop(1, '#211B16');
+    ctx.fillStyle = grad;
+    ctx.fillRect(-pw/2, 0, pw, pillarH);
+    ctx.strokeStyle = '#3D332688';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-pw/2, 0, pw, pillarH);
+    // rivets
+    ctx.fillStyle = '#1A1612';
+    for (let ry = 14*dpr; ry < pillarH - 6*dpr; ry += 22*dpr) {
+      ctx.beginPath(); ctx.arc(-pw/2 + 5*dpr, ry, 1.6*dpr, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(pw/2 - 5*dpr, ry, 1.6*dpr, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  // base carriage plate
+  ctx.fillStyle = '#3D332688';
+  ctx.beginPath();
+  ctx.roundRect(-pw/2 - 6*dpr, -5*dpr, pw + 12*dpr, 12*dpr, 3*dpr);
+  ctx.fill();
+  ctx.strokeStyle = '#1A1612';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // wheels on carriage (two small side wheels, decorative, fixed to base not rotating with barrel)
+  [-pw/2 - 2*dpr, pw/2 + 2*dpr].forEach(wx => {
+    ctx.save();
+    ctx.translate(wx, 8*dpr);
+    ctx.beginPath(); ctx.arc(0, 0, 10*dpr, 0, Math.PI*2);
+    const wg = ctx.createRadialGradient(-3*dpr, -3*dpr, 1, 0, 0, 10*dpr);
+    wg.addColorStop(0, '#5C4A32'); wg.addColorStop(1, '#211B16');
+    ctx.fillStyle = wg; ctx.fill();
+    ctx.strokeStyle = '#1A1612'; ctx.lineWidth = 2; ctx.stroke();
+    for (let s = 0; s < 6; s++) {
+      ctx.save(); ctx.rotate(s * Math.PI/3);
+      ctx.strokeStyle = '#1A1612'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, 2*dpr); ctx.lineTo(0, 9*dpr); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(0,0,3*dpr,0,Math.PI*2);
+    ctx.fillStyle = '#B5732A'; ctx.fill();
+    ctx.restore();
+  });
+
+  // pivot point for barrel (elevation trunnion)
+  ctx.save();
+  ctx.translate(0, -3*dpr);
+  ctx.rotate(-toRad(effectiveAngle));
+
+  // breech block
+  ctx.fillStyle = '#211B16';
+  ctx.beginPath();
+  ctx.roundRect(-8*dpr, -9*dpr, 14*dpr, 18*dpr, 3*dpr);
+  ctx.fill();
+  ctx.strokeStyle = '#3D332688'; ctx.lineWidth = 1; ctx.stroke();
+
+  // barrel
+  const bLen = 42*dpr, bW = 11*dpr;
+  const bGrad = ctx.createLinearGradient(0, -bW/2, 0, bW/2);
+  bGrad.addColorStop(0, '#3D2B12');
+  bGrad.addColorStop(0.28, '#8B5A1F');
+  bGrad.addColorStop(0.5, '#D99A4E');
+  bGrad.addColorStop(0.72, '#8B5A1F');
+  bGrad.addColorStop(1, '#3D2B12');
+  ctx.fillStyle = bGrad;
+  ctx.beginPath();
+  ctx.roundRect(0, -bW/2, bLen, bW, 4*dpr);
+  ctx.fill();
+  ctx.strokeStyle = '#1A1612'; ctx.lineWidth = 1; ctx.stroke();
+
+  // barrel bands (3 reinforcement rings)
+  [bLen*0.25, bLen*0.55, bLen*0.85].forEach(bx => {
+    ctx.fillStyle = '#6E4A1F';
+    ctx.beginPath();
+    ctx.roundRect(bx, -bW/2 - 1.5*dpr, 6*dpr, bW + 3*dpr, 2*dpr);
+    ctx.fill();
+  });
+
+  // muzzle opening
+  ctx.beginPath();
+  ctx.ellipse(bLen, 0, 2.5*dpr, bW/2, 0, 0, Math.PI*2);
+  ctx.fillStyle = '#0D0A07';
+  ctx.fill();
+
+  // trunnion pin (visual pivot marker)
+  ctx.beginPath();
+  ctx.arc(0, 0, 4*dpr, 0, Math.PI*2);
+  ctx.fillStyle = '#B5732A';
+  ctx.fill();
+  ctx.strokeStyle = '#1A1612'; ctx.lineWidth = 1; ctx.stroke();
+
+  ctx.restore(); // end barrel rotation
+  ctx.restore(); // end slope rotation
+}
+
+function drawTrajectory(result, progress) {
+  const dpr = devicePixelRatio;
+  const points = result.path;
+  const showCount = Math.floor(points.length * progress);
+  if (showCount < 2) return;
+
+  ctx.beginPath();
+  for (let i = 0; i < showCount; i++) {
+    const { sx, sy } = worldToScreen(points[i].x, points[i].y, result);
+    i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+  }
+  const p0 = worldToScreen(points[0].x, points[0].y, result);
+  const p1 = worldToScreen(points[showCount-1].x, points[showCount-1].y, result);
+  const grad = ctx.createLinearGradient(p0.sx, 0, p1.sx, 0);
+  grad.addColorStop(0, 'rgba(181,115,42,0.0)');
+  grad.addColorStop(0.4, 'rgba(181,115,42,0.35)');
+  grad.addColorStop(1, 'rgba(217,154,78,0.95)');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  const dotStep = Math.max(1, Math.floor(showCount / 12));
+  for (let i = dotStep; i < showCount; i += dotStep) {
+    const { sx, sy } = worldToScreen(points[i].x, points[i].y, result);
+    const alpha = 0.15 + (i / showCount) * 0.5;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 2.5*dpr, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(217,154,78,${alpha})`;
+    ctx.fill();
+  }
+
+  if (progress < 1) {
+    const ci = Math.min(showCount, points.length - 1);
+    const { sx: bx, sy: by } = worldToScreen(points[ci].x, points[ci].y, result);
+    const glow = ctx.createRadialGradient(bx, by, 0, bx, by, 18*dpr);
+    glow.addColorStop(0, 'rgba(217,154,78,0.5)');
+    glow.addColorStop(1, 'rgba(217,154,78,0)');
+    ctx.beginPath(); ctx.arc(bx, by, 18*dpr, 0, Math.PI*2);
+    ctx.fillStyle = glow; ctx.fill();
+
+    ctx.beginPath(); ctx.arc(bx, by, 7*dpr, 0, Math.PI*2);
+    ctx.fillStyle = '#1A1612'; ctx.fill();
+    ctx.strokeStyle = '#B5732A'; ctx.lineWidth = 2;
+    ctx.stroke();
+  } else {
+    const last = points[points.length - 1];
+    const { sx: ix, sy: iy } = worldToScreen(last.x, last.y, result);
+    ctx.beginPath();
+    for (let k = 0; k < 8; k++) {
+      const angle = (k / 8) * Math.PI * 2;
+      const len = (k % 2 === 0 ? 14 : 8) * dpr;
+      const x = ix + Math.cos(angle) * len;
+      const y = iy + Math.sin(angle) * len;
+      k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(139,46,46,0.6)'; ctx.fill();
+    ctx.strokeStyle = '#C24A4A'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+
+function drawAnnotations(result) {
+  const dpr = devicePixelRatio;
+  const ph = parseFloat(document.getElementById('platformHeight').value) || 0;
+  const points = result.path;
+
+  const maxH = result.maxHeight + ph;
+  const { sx: x0, sy: hy } = worldToScreen(0, maxH, result);
+  const { sx: x1 } = worldToScreen(result.range * 0.5, maxH, result);
+
+  ctx.strokeStyle = 'rgba(127,162,148,0.4)';
+  ctx.lineWidth = 1; ctx.setLineDash([4, 8]);
+  ctx.beginPath(); ctx.moveTo(x0, hy); ctx.lineTo(x1, hy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = 'rgba(127,162,148,0.9)';
+  ctx.font = `bold ${9*dpr}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'left';
+  ctx.fillText(`▲ ${result.maxHeight.toFixed(1)}m`, x0 + 6*dpr, hy - 5*dpr);
+
+  const last = points[points.length-1];
+  const { sx: rx, sy: ry } = worldToScreen(last.x, last.y, result);
+  const { sx: ox } = worldToScreen(0, last.y, result);
+
+  ctx.strokeStyle = 'rgba(217,154,78,0.4)';
+  ctx.lineWidth = 1; ctx.setLineDash([4, 8]);
+  ctx.beginPath(); ctx.moveTo(ox, ry); ctx.lineTo(rx, ry); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = 'rgba(217,154,78,0.95)';
+  ctx.font = `bold ${9*dpr}px JetBrains Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText(`⟷ ${result.range.toFixed(1)}m`, (ox+rx)/2, ry + 15*dpr);
+
+  if (result.pt1 && result.pt2) {
+    const p1 = worldToScreen(result.pt1.x, result.pt1.y, result);
+    const p2 = worldToScreen(result.pt2.x, result.pt2.y, result);
+    ctx.strokeStyle = 'rgba(127,162,148,0.5)';
+    ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.moveTo(p1.sx, p1.sy); ctx.lineTo(p2.sx, p2.sy); ctx.stroke();
+    ctx.setLineDash([]);
+    [p1, p2].forEach(p => {
+      ctx.beginPath(); ctx.arc(p.sx, p.sy, 5*dpr, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(127,162,148,0.3)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(127,162,148,0.85)'; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+  }
+}
+
+function drawScene(result, progress) {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const bg = ctx.createRadialGradient(W*0.35, H*0.25, 0, W*0.5, H*0.5, Math.max(W,H));
+  bg.addColorStop(0, '#221C16');
+  bg.addColorStop(1, '#1A1612');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  drawGrid(result);
+  drawGround(result);
+  drawTrajectory(result, progress);
+  if (progress >= 1) drawAnnotations(result);
+  drawCannon(result, progress);
+  drawSmoke();
+  drawImpactParticles();
+}
+
+function drawIdle() {
+  const W = canvas.width, H = canvas.height;
+  const dpr = devicePixelRatio;
+  ctx.clearRect(0, 0, W, H);
+
+  const bg = ctx.createRadialGradient(W*0.35, H*0.3, 0, W*0.5, H*0.5, Math.max(W,H));
+  bg.addColorStop(0, '#221C16'); bg.addColorStop(1, '#1A1612');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  for (let gx = 60*dpr; gx < W; gx += 60*dpr) {
+    for (let gy = 60*dpr; gy < H; gy += 60*dpr) {
+      ctx.beginPath(); ctx.arc(gx, gy, 1*dpr, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(74,61,44,0.4)'; ctx.fill();
+    }
+  }
+
+  const slope = parseFloat(document.getElementById('groundSlope').value) || 0;
+  ctx.save();
+  ctx.translate(W*0.15, H*0.78);
+  ctx.strokeStyle = 'rgba(92,122,110,0.35)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-100*dpr, 100*dpr*Math.tan(toRad(slope)));
+  ctx.lineTo(W, -(W-W*0.15)*Math.tan(toRad(slope)));
+  ctx.stroke();
+  ctx.restore();
+
+  const cx = W*0.15, cy = H*0.78;
+  ctx.save(); ctx.translate(cx, cy);
+  ctx.rotate(toRad(slope));
+
+  ctx.fillStyle = '#3D332688';
+  ctx.beginPath(); ctx.roundRect(-19*dpr, -5*dpr, 38*dpr, 12*dpr, 3*dpr); ctx.fill();
+
+  ctx.translate(0, -3*dpr);
+  ctx.rotate(-toRad(currentAngle));
+  const bGrad = ctx.createLinearGradient(0, -5.5*dpr, 0, 5.5*dpr);
+  bGrad.addColorStop(0, '#3D2B12'); bGrad.addColorStop(0.5, '#D99A4E'); bGrad.addColorStop(1, '#3D2B12');
+  ctx.fillStyle = bGrad;
+  ctx.beginPath(); ctx.roundRect(0, -5.5*dpr, 40*dpr, 11*dpr, 4*dpr); ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(184,172,146,0.55)';
+  ctx.font = `${12.5*dpr}px Bitter, serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('Set your charge and elevation, then fire', W/2, H/2 + 20*dpr);
+  ctx.font = `${10*dpr}px JetBrains Mono, monospace`;
+  ctx.fillStyle = 'rgba(184,172,146,0.4)';
+  ctx.fillText('drag the wheel ← to adjust barrel angle', W/2, H/2 + 40*dpr);
+}
+
+function spawnSmoke(sx, sy, angle) {
+  const rad = toRad(angle);
+  for (let i = 0; i < 22; i++) {
+    const spread = (Math.random() - 0.5) * 0.6;
+    smokeParticles.push({
+      x: sx, y: sy,
+      vx: Math.cos(-rad + spread) * (2 + Math.random()*2),
+      vy: Math.sin(-rad + spread) * (2 + Math.random()*2) - 0.5,
+      life: 1, decay: 0.011 + Math.random() * 0.009,
+      r: 4 + Math.random() * 11
+    });
+  }
+}
+
+function drawSmoke() {
+  smokeParticles = smokeParticles.filter(p => p.life > 0);
+  smokeParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vx *= 0.96; p.life -= p.decay; p.r += 0.32;
+    const a = p.life * 0.22;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(180,165,140,${a})`; ctx.fill();
+  });
+}
+
+function spawnImpact(sx, sy) {
+  for (let i = 0; i < 26; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 5;
+    particles.push({
+      x: sx, y: sy,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+      life: 1, decay: 0.02 + Math.random() * 0.02,
+      r: 1.5 + Math.random() * 3
+    });
+  }
+}
+
+function drawImpactParticles() {
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= p.decay;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(139,46,46,${p.life * 0.85})`; ctx.fill();
+  });
+}
+
+function startAnimation(result) {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  isAnimating = true;
+  const duration = Math.min(3000, Math.max(700, result.flightTime * 600));
+  const startTime = performance.now();
+
+  const ph = parseFloat(document.getElementById('platformHeight').value) || 0;
+  const slope = parseFloat(document.getElementById('groundSlope').value) || 0;
+  const { sx: cx, sy: cy } = worldToScreen(0, ph, result);
+  spawnSmoke(cx, cy, currentAngle + slope);
+
+  const pill = document.getElementById('statusPill');
+  pill.className = 'pill live'; pill.textContent = 'In Flight';
+
+  function frame(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    drawScene(result, progress);
+
+    if (progress < 1) {
+      animFrame = requestAnimationFrame(frame);
+    } else {
+      isAnimating = false;
+      pill.className = 'pill'; pill.textContent = 'Landed';
+      const last = result.path[result.path.length - 1];
+      const { sx: ix, sy: iy } = worldToScreen(last.x, last.y, result);
+      spawnImpact(ix, iy);
+
+      function particleFrame() {
+        if (particles.length > 0 || smokeParticles.length > 0) {
+          drawScene(result, 1);
+          requestAnimationFrame(particleFrame);
+        }
+      }
+      requestAnimationFrame(particleFrame);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function renderResults(result) {
+  const strip = document.getElementById('resultsStrip');
+  const slope = parseFloat(document.getElementById('groundSlope').value) || 0;
+  const windOn = document.getElementById('windToggle').checked;
+
+  let slopeNote = slope !== 0
+    ? `<div class="stat-sub">${slope > 0 ? '▲ uphill' : '▼ downhill'} ${Math.abs(slope)}°</div>`
+    : '';
+
+  let pt1Str = '—', pt2Str = '—';
+  if (result.pt1 && result.pt2) {
+    pt1Str = `x=${result.pt1.x.toFixed(0)}m`;
+    pt2Str = `x=${result.pt2.x.toFixed(0)}m`;
+  }
+
+  strip.innerHTML = `
+    <div class="stat">
+      <div class="stat-label">Max Range</div>
+      <div class="stat-value brass">${result.range.toFixed(1)}</div>
+      <div class="stat-unit">metres</div>
+      ${slopeNote}
+    </div>
+    <div class="stat">
+      <div class="stat-label">Max Height</div>
+      <div class="stat-value verdigris">${result.maxHeight.toFixed(1)}</div>
+      <div class="stat-unit">metres above launch</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Flight Time</div>
+      <div class="stat-value">${result.flightTime.toFixed(2)}</div>
+      <div class="stat-unit">seconds</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Max Velocity</div>
+      <div class="stat-value verdigris">${result.maxVelocity.toFixed(1)}</div>
+      <div class="stat-unit">m/s${windOn ? ' (wind-assisted)' : ''}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Impact Speed</div>
+      <div class="stat-value ox">${result.impactSpeed.toFixed(1)}</div>
+      <div class="stat-unit">m/s · ${result.impactAngle.toFixed(1)}° angle</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Equal Height Pts</div>
+      <div class="stat-value" style="font-size:13px; line-height:1.4">${pt1Str}</div>
+      <div class="stat-sub">${pt2Str}</div>
+    </div>
+  `;
+}
+
+function updateTerrainInfo() {
+  const slope = parseFloat(document.getElementById('groundSlope').value) || 0;
+  const info = document.getElementById('terrainInfo');
+  if (slope === 0) info.textContent = 'Flat ground — cannon sits level';
+  else if (slope > 0) info.textContent = `Uphill ${slope}° — cannon tilts with the rise, shorter range`;
+  else info.textContent = `Downhill ${Math.abs(slope)}° — cannon tilts with the drop, extended range`;
+}
+
+function getParams() {
+  const launchAngle = currentAngle;
+  const launchVelocity = parseFloat(document.getElementById('launchVelocity').value);
+  const platformHeight = parseFloat(document.getElementById('platformHeight').value) || 0;
+  const groundSlope = parseFloat(document.getElementById('groundSlope').value) || 0;
+  const windEnabled = document.getElementById('windToggle').checked;
+  const windSpeed = parseFloat(document.getElementById('windSpeed').value) || 0;
+  const windAngle = parseFloat(document.getElementById('windAngle').value) || 0;
+
+  const err = document.getElementById('errorMsg');
+
+  if (isNaN(launchAngle) || launchAngle < 0 || launchAngle > 90) {
+    err.textContent = 'Barrel elevation must be between 0° and 90°'; err.classList.add('visible'); return null;
+  }
+  if (isNaN(launchVelocity) || launchVelocity <= 0 || launchVelocity > 500) {
+    err.textContent = 'Velocity must be between 1 and 500 m/s'; err.classList.add('visible'); return null;
+  }
+  if (platformHeight < 0 || platformHeight > 100) {
+    err.textContent = 'Platform height must be between 0 and 100m'; err.classList.add('visible'); return null;
+  }
+  if (groundSlope < -45 || groundSlope > 45) {
+    err.textContent = 'Ground slope must be between -45° and 45°'; err.classList.add('visible'); return null;
+  }
+
+  err.classList.remove('visible');
+  return { v0: launchVelocity, launchAngle, platformHeight, groundSlope, windEnabled, windSpeed, windAngle };
+}
+
+document.getElementById('fireBtn').addEventListener('click', () => {
+  const params = getParams(); if (!params) return;
+  particles = []; smokeParticles = [];
+  currentResult = simulate(params);
+  startAnimation(currentResult);
+  renderResults(currentResult);
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  currentResult = null; particles = []; smokeParticles = [];
+  isAnimating = false;
+  document.getElementById('statusPill').className = 'pill';
+  document.getElementById('statusPill').textContent = 'Loaded';
+  document.getElementById('resultsStrip').innerHTML = '<div class="no-results">Fire the cannon to record results →</div>';
+  document.getElementById('errorMsg').classList.remove('visible');
+  drawIdle();
+});
+
+document.getElementById('windToggle').addEventListener('change', function() {
+  document.getElementById('windFields').className = 'wind-fields ' + (this.checked ? 'visible' : 'hidden');
+});
+
+document.getElementById('groundSlope').addEventListener('input', () => {
+  updateTerrainInfo();
+  if (!isAnimating) { if (currentResult) drawScene(currentResult, 1); else drawIdle(); }
+});
+document.getElementById('platformHeight').addEventListener('input', () => {
+  if (!isAnimating) { if (currentResult) drawScene(currentResult, 1); else drawIdle(); }
+});
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+drawIdle();
+</script>
+</body>
+</html>
